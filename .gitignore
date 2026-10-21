@@ -480,3 +480,13 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# rbs-sip-fone: persönliche Laufzeitdaten (normalerweise unter %APPDATA%\rbs-sip-fone),
+# falls RBS_SIP_FONE_HOME einmal auf einen Ordner im Projekt zeigt
+settings.json
+settings.json.tmp
+history.json
+history.json.tmp
+*.defekt
+sip.log
+sip.log.*
