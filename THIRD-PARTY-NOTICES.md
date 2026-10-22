@@ -39,6 +39,7 @@ genannten Komponenten.
 | System.Numerics.Tensors | 9.0.0 | MIT | Microsoft Corporation | https://github.com/dotnet/runtime |
 | WinRT.Runtime (C#/WinRT) | 10.0.17763.57 | MIT | Microsoft Corporation | https://github.com/microsoft/CsWinRT |
 | Microsoft.Windows.SDK.NET (Windows-SDK-Projektion) | 10.0.17763.57 | Lizenzbedingungen des Windows SDK | Microsoft Corporation | https://aka.ms/WinSDKLicenseURL |
+| Material Icons – Symbol „call“ (Telefonhörer im Programmsymbol `app.ico`, auf orangem Grund neu gezeichnet) | – | Apache-2.0 | Google LLC | https://github.com/google/material-design-icons |
 
 Die .NET Desktop Runtime wird nicht mitgeliefert (framework-abhängige Veröffentlichung); Microsoft stellt sie
 unter eigenen Bedingungen bereit. Bei einer eigenständigen Veröffentlichung (`--self-contained`) werden Teile der
@@ -346,11 +347,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Die Windows-SDK-Projektion für .NET (`Microsoft.Windows.SDK.NET.dll`) stellt Microsoft als Teil des .NET SDK bereit.
 Sie wird unter den Lizenzbedingungen des Windows SDK weitergegeben: https://aka.ms/WinSDKLicenseURL
 
-### DnsClient, Common.Logging, SimpleBase – Apache License 2.0
+### DnsClient, Common.Logging, SimpleBase, Material Icons – Apache License 2.0
 
 - DnsClient: Copyright (c) 2024 Michael Conrad
 - Common.Logging, Common.Logging.Core: Copyright Aleksandar Seovic, Mark Pollack, Erich Eichinger, Stephen Bohlen
 - SimpleBase: Copyright 2014-2017 Sedat Kapanoglu
+- Material Icons: Copyright Google LLC (Symbol „call“; geändert: auf orangem, abgerundetem Quadrat als Programmsymbol)
 
 ```text
                                  Apache License

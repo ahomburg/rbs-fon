@@ -148,10 +148,13 @@ tests/RbsSipFone.Tests/         Unit-Tests (xUnit), z. B. für den Link-Parser �
 bereitgestellt.
 
 **Logo und Marke ausgenommen:** Name und Logo „rbs Redaktionsbüro Stutensee“, die Bilddateien in
-`src/RbsSipFone/Assets/` (`rbs-logo.png`, `rbs-symbol.png`, `app.ico`) und die rbs-Farbgestaltung fallen **nicht**
+`src/RbsSipFone/Assets/` (`rbs-logo.png`, `rbs-symbol.png`) und die rbs-Farbgestaltung fallen **nicht**
 unter die MIT-Lizenz. Alle Rechte daran sind vorbehalten. Wer das Projekt weiterentwickelt oder eigene Versionen
 verteilt, muss Logo und Namen durch eigene ersetzen. Das Projekt darf nicht so auftreten, als stamme es vom
 rbs Redaktionsbüro Stutensee.
+
+**Programmsymbol:** `app.ico` (Taskleiste, Fenster, Verknüpfungen) zeigt den Telefonhörer aus den
+[Material Icons](https://github.com/google/material-design-icons) von Google (Apache License 2.0) auf orangem Grund.
 
 **Drittanbieter-Komponenten:** Die verwendeten Bibliotheken stehen unter eigenen Lizenzen (MIT, BSD, Apache 2.0),
 aufgeführt in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
