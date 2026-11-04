@@ -30,7 +30,30 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="28,8,28,22">
                         <TextBlock Style="{StaticResource FieldLabel}" Text="Mikrofon" />
-                        <ComboBox x:Name="MicBox" />
+                        <ComboBox x:Name="MicBox" SelectionChanged="MicBox_SelectionChanged" />
+
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Mikrofon-Verstärkung" />
+                        <DockPanel>
+                            <TextBlock x:Name="MicGainText" DockPanel.Dock="Right" Width="110" TextAlignment="Right"
+                                       FontSize="12.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <Slider x:Name="MicGainSlider" Minimum="0" Maximum="20" SmallChange="1" LargeChange="3"
+                                    IsSnapToTickEnabled="True" TickFrequency="1" ValueChanged="MicGainSlider_ValueChanged"
+                                    AutomationProperties.Name="Mikrofon-Verstärkung" />
+                        </DockPanel>
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="Macht Ihre Stimme für Gesprächspartner lauter, z. B. bei leisen Headsets. Zu viel Verstärkung hebt auch Hintergrundgeräusche an; sehr laute Stellen werden sanft begrenzt statt zu übersteuern." />
+
+                        <DockPanel Margin="0,10,0,0">
+                            <Button x:Name="MicTestButton" DockPanel.Dock="Left" Style="{StaticResource SecondaryButton}" Padding="12,6"
+                                    MinWidth="130" Content="Mikrofon testen" Click="MicTest_Click" />
+                            <Border x:Name="MicLevelTrack" Height="8" CornerRadius="4" Background="{StaticResource Panel}"
+                                    VerticalAlignment="Center" Margin="12,0,0,0" ClipToBounds="True">
+                                <Border x:Name="MicLevelBar" Width="0" HorizontalAlignment="Left" CornerRadius="4"
+                                        Background="{StaticResource Success}" />
+                            </Border>
+                        </DockPanel>
+                        <TextBlock x:Name="MicTestHint" Style="{StaticResource Hint}" Visibility="Collapsed"
+                                   Text="Sprechen Sie normal laut. Der Balken sollte beim Sprechen deutlich ausschlagen und meist grün bleiben; orange bedeutet, dass der Begrenzer eingreift." />
                         <TextBlock Style="{StaticResource FieldLabel}" Text="Lautsprecher / Headset" />
                         <ComboBox x:Name="SpeakerBox" />
                         <TextBlock Style="{StaticResource FieldLabel}" Text="Klingelton auf" />

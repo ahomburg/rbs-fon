@@ -249,7 +249,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (_settings.AutoHoldOtherCalls) await HoldAllExceptAsync(null);
 
-        var call = CallViewModel.CreateOutgoing(account, _engine, target, number, MicIndex, SpeakerIndex);
+        var call = CallViewModel.CreateOutgoing(account, _engine, target, number, MicIndex, SpeakerIndex, MicGain);
         AddCall(call);
         DialNumber = "";
         await call.DialAsync(target);
@@ -312,7 +312,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         SipLog.Write($"[{account.Name}] eingehender Anruf von {invite.Header.From?.FromURI}");
-        var call = CallViewModel.CreateIncoming(account, _engine, invite, MicIndex, SpeakerIndex);
+        var call = CallViewModel.CreateIncoming(account, _engine, invite, MicIndex, SpeakerIndex, MicGain);
         AddCall(call);
         if (SelectedCall == null || SelectedCall.IsEnded) SelectedCall = call;
         _dialogs.NotifyIncomingCall(call);
@@ -466,6 +466,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     private int MicIndex() => AudioDevices.MicrophoneIndex(_settings.MicrophoneDevice);
+    private float MicGain() => MicrophoneGain.Factor(_settings.MicrophoneGainDb);
     private int SpeakerIndex() => AudioDevices.SpeakerIndex(_settings.SpeakerDevice);
 
     // ------------------------------------------------------------------ Konten

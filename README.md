@@ -28,6 +28,8 @@ Lizenz: MIT für den eigenen Code. Für Logo und Marke sowie für die Bibliothek
 - Lokal erzeugter deutscher Freiton (425 Hz) bei 180 Ringing ohne Early Media.
 - Anrufliste (ein-/ausgehend/verpasst, Dauer, Konto) mit Rückruf per Doppelklick und Kontextmenü.
 - Audiogeräte wählbar: Mikrofon, Lautsprecher/Headset, separates Klingelton-Gerät.
+- **Mikrofon-Verstärkung** (Einstellungen → Audio, 0 bis +20 dB) für leise Headsets, mit weichem Begrenzer gegen
+  Übersteuern und Pegelanzeige zum Testen. Wirkt sofort, auch in laufenden Gesprächen.
 - Optionales SIP-Protokoll zur Fehlersuche.
 - **Standard-App für Telefon-Links** (`tel:`, `callto:`, `sip:`, `sips:`), z. B. Links auf Webseiten, in Outlook oder Teams.
 - **Automatischer Start mit Windows** (optional minimiert), damit die Konten nach der Anmeldung sofort erreichbar sind.
@@ -135,7 +137,7 @@ src/RbsSipFone/
   ViewModels/AccountViewModel   Konto + Registrierung (SIPRegistrationUserAgent)
   ViewModels/CallViewModel      ein Gespräch (SIPUserAgent + WindowsAudioEndPoint)
   ViewModels/MainViewModel      Konten, Gespräche, Wählfeld, Anrufliste, Klingel-/Freiton-Logik
-  Services/                     Konfiguration, Protokoll, Audiogeräte, Tonerzeugung,
+  Services/                     Konfiguration, Protokoll, Audiogeräte, Tonerzeugung, Mikrofon-Verstärkung,
                                 Link-Parser (PhoneLink), Windows-Registrierung, Autostart, Anrufer-Erkennung (CallerLookup), Einzelinstanz (SingleInstance)
   Themes/Theme.xaml             rbs-Gestaltung (Farben, Buttons, Felder, Schalter, Scrollbars)
   Views/                        Hauptfenster und Dialoge

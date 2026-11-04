@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using NAudio.Wave;
 using RbsSipFone.Models;
 using RbsSipFone.Services;
 
@@ -19,6 +20,10 @@ public partial class SettingsDialog : Window
         var speakers = AudioDevices.Speakers();
         Fill(SpeakerBox, speakers, settings.SpeakerDevice);
         Fill(RingBox, speakers, settings.RingDevice ?? settings.SpeakerDevice);
+
+        MicGainSlider.Value = Math.Clamp(settings.MicrophoneGainDb, 0, MicrophoneGain.MaxDb);
+        MicGainSlider_ValueChanged(MicGainSlider, new RoutedPropertyChangedEventArgs<double>(0, MicGainSlider.Value));
+        Closed += (_, _) => StopMicTest();
 
         PortBox.Text = settings.LocalSipPort.ToString();
         AutoHoldBox.IsChecked = settings.AutoHoldOtherCalls;
@@ -112,6 +117,107 @@ public partial class SettingsDialog : Window
         box.SelectedItem = devices.FirstOrDefault(d => d == selected) ?? devices.FirstOrDefault(d => d.StartsWith(selected ?? "\0")) ?? devices[0];
     }
 
+    // ------------------------------------------------------------------ Mikrofon-Verstärkung und Pegeltest
+
+    private WaveIn? _micTest;
+    private volatile float _testFactor = 1f;
+    private float _shownLevel;
+
+    private void MicGainSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        var db = (int)Math.Round(MicGainSlider.Value);
+        _testFactor = MicrophoneGain.Factor(db);
+        MicGainText.Text = MicrophoneGain.Describe(db);
+    }
+
+    private void MicBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Laufenden Test auf das neu gewählte Mikrofon umstellen.
+        if (_micTest == null) return;
+        StopMicTest();
+        StartMicTest();
+    }
+
+    private void MicTest_Click(object sender, RoutedEventArgs e)
+    {
+        if (_micTest != null) StopMicTest();
+        else StartMicTest();
+    }
+
+    private void StartMicTest()
+    {
+        try
+        {
+            _micTest = new WaveIn
+            {
+                DeviceNumber = AudioDevices.MicrophoneIndex(Selected(MicBox)),
+                WaveFormat = new WaveFormat(16000, 16, 1),
+                BufferMilliseconds = 50
+            };
+            _micTest.DataAvailable += OnMicTestData;
+            _micTest.RecordingStopped += (_, args) =>
+            {
+                if (args.Exception != null)
+                    Dispatcher.BeginInvoke(() => { StopMicTest(); ShowMicTestText("Mikrofon-Fehler: " + args.Exception.Message, true); });
+            };
+            _micTest.StartRecording();            MicTestButton.Content = "Test beenden";
+            ShowMicTestText(null, false);
+        }
+        catch (Exception ex)
+        {
+            StopMicTest();
+            ShowMicTestText("Das Mikrofon konnte nicht geöffnet werden: " + ex.Message, true);
+        }
+    }
+
+    private void StopMicTest()
+    {
+        var test = _micTest;
+        _micTest = null;
+        if (test != null)
+        {
+            test.DataAvailable -= OnMicTestData;
+            try { test.StopRecording(); } catch { }
+            test.Dispose();
+        }
+        MicTestButton.Content = "Mikrofon testen";
+        _shownLevel = 0;
+        MicLevelBar.Width = 0;
+    }
+
+    /// <summary>Spitzenpegel eines Audioblocks nach der eingestellten Verstärkung (so, wie ihn der Gesprächspartner hört).</summary>
+    private void OnMicTestData(object? sender, WaveInEventArgs e)
+    {
+        var factor = _testFactor;
+        var peak = 0;
+        for (var i = 0; i + 1 < e.BytesRecorded; i += 2)
+        {
+            var value = Math.Abs((int)MicrophoneGain.Process(BitConverter.ToInt16(e.Buffer, i), factor));
+            if (value > peak) peak = value;
+        }
+        var level = peak / 32767f;
+        Dispatcher.BeginInvoke(() => ShowLevel(level));
+    }
+
+    private void ShowLevel(float level)
+    {
+        if (_micTest == null) return;
+        _shownLevel = Math.Max(level, _shownLevel * 0.8f); // schnell hoch, langsam zurück
+        MicLevelBar.Width = Math.Max(0, MicLevelTrack.ActualWidth * Math.Min(1f, _shownLevel));
+        MicLevelBar.Background = (System.Windows.Media.Brush)FindResource(
+            _shownLevel < MicrophoneGain.Knee ? "Success" : _shownLevel < 0.97f ? "Orange" : "Danger");
+    }
+
+    private string? _micTestHintText;
+
+    private void ShowMicTestText(string? error, bool isError)
+    {
+        _micTestHintText ??= MicTestHint.Text; // Hinweistext aus dem XAML merken
+        MicTestHint.Visibility = Visibility.Visible;
+        MicTestHint.Text = error ?? _micTestHintText;
+        MicTestHint.Foreground = (System.Windows.Media.Brush)FindResource(isError ? "Danger" : "Muted");
+    }
+
     private static string? Selected(ComboBox box)
     {
         var value = box.SelectedItem as string;
@@ -140,6 +246,7 @@ public partial class SettingsDialog : Window
         _settings.LocalSipPort = port;
         _settings.AutoHoldOtherCalls = AutoHoldBox.IsChecked == true;
         _settings.SipTrace = TraceBox.IsChecked == true;
+        _settings.MicrophoneGainDb = (int)Math.Round(MicGainSlider.Value);
         _settings.DialLinksImmediately = DialLinksBox.IsChecked == true;
         _settings.CallerLookupUrl = string.IsNullOrWhiteSpace(LookupUrlBox.Text) ? null : LookupUrlBox.Text.Trim();
         _settings.CallerLookupApiKey = LookupKeyBox.Password.Trim();

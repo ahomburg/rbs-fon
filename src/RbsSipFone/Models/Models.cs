@@ -47,6 +47,8 @@ public sealed class AppSettings
     public string? MicrophoneDevice { get; set; }
     public string? SpeakerDevice { get; set; }
     public string? RingDevice { get; set; }
+    /// <summary>Zusätzliche Mikrofon-Verstärkung in dB (0 = aus, max. 20).</summary>
+    public int MicrophoneGainDb { get; set; }
     public bool AutoHoldOtherCalls { get; set; } = true;
     /// <summary>Bei Klick auf tel:/sip:-Links sofort wählen statt die Nummer nur ins Wählfeld zu übernehmen.</summary>
     public bool DialLinksImmediately { get; set; }

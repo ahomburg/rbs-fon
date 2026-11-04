@@ -18,6 +18,7 @@ public sealed class CallViewModel : ObservableObject
     private readonly SipEngine _engine;
     private readonly Func<int> _micIndex;
     private readonly Func<int> _speakerIndex;
+    private readonly Func<float> _micGain;
     private readonly string _initialCallId;
     private SIPServerUserAgent? _uas;
     private WindowsAudioEndPoint? _audio;
@@ -32,13 +33,14 @@ public sealed class CallViewModel : ObservableObject
     private readonly SemaphoreSlim _dtmfLock = new(1, 1);
 
     private CallViewModel(AccountViewModel account, SipEngine engine, CallDirection direction,
-        Func<int> micIndex, Func<int> speakerIndex, string callId)
+        Func<int> micIndex, Func<int> speakerIndex, Func<float> micGain, string callId)
     {
         Account = account;
         _engine = engine;
         Direction = direction;
         _micIndex = micIndex;
         _speakerIndex = speakerIndex;
+        _micGain = micGain;
         _initialCallId = callId;
         Started = DateTime.Now;
         UA = new SIPUserAgent(engine.Transport, account.OutboundProxy);
@@ -171,9 +173,9 @@ public sealed class CallViewModel : ObservableObject
     // ---------------------------------------------------------------- ausgehend
 
     public static CallViewModel CreateOutgoing(AccountViewModel account, SipEngine engine, SIPURI target,
-        string displayNumber, Func<int> micIndex, Func<int> speakerIndex)
+        string displayNumber, Func<int> micIndex, Func<int> speakerIndex, Func<float> micGain)
     {
-        var call = new CallViewModel(account, engine, CallDirection.Outgoing, micIndex, speakerIndex, CallProperties.CreateNewCallId())
+        var call = new CallViewModel(account, engine, CallDirection.Outgoing, micIndex, speakerIndex, micGain, CallProperties.CreateNewCallId())
         {
             RemoteNumber = displayNumber,
         };
@@ -240,9 +242,9 @@ public sealed class CallViewModel : ObservableObject
     // ---------------------------------------------------------------- eingehend
 
     public static CallViewModel CreateIncoming(AccountViewModel account, SipEngine engine, SIPRequest invite,
-        Func<int> micIndex, Func<int> speakerIndex)
+        Func<int> micIndex, Func<int> speakerIndex, Func<float> micGain)
     {
-        var call = new CallViewModel(account, engine, CallDirection.Incoming, micIndex, speakerIndex, invite.Header.CallId);
+        var call = new CallViewModel(account, engine, CallDirection.Incoming, micIndex, speakerIndex, micGain, invite.Header.CallId);
         var from = invite.Header.From;
         call.RemoteNumber = from?.FromURI?.User ?? from?.FromURI?.Host ?? "Unbekannt";
         call.RemoteName = from?.FromName?.Trim('"', ' ') ?? "";
@@ -288,7 +290,8 @@ public sealed class CallViewModel : ObservableObject
 
     private void CreateMedia()
     {
-        _audio = new WindowsAudioEndPoint(new AudioEncoder(), _speakerIndex(), _micIndex());
+        // Mikrofon-Verstärkung greift vor dem Kodieren; die Wiedergabe bleibt unverändert.
+        _audio = new WindowsAudioEndPoint(new GainAudioEncoder(new AudioEncoder(), _micGain), _speakerIndex(), _micIndex());
         _audio.OnAudioSourceError += err => SipLog.Write($"Mikrofon-Fehler: {err}");
         _audio.OnAudioSinkError += err => SipLog.Write($"Lautsprecher-Fehler: {err}");
         _media = new VoIPMediaSession(_audio.ToMediaEndPoints()) { AcceptRtpFromAny = true };
