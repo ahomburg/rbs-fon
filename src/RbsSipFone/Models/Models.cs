@@ -50,6 +50,8 @@ public sealed class AppSettings
     /// <summary>Zusätzliche Mikrofon-Verstärkung in dB (0 = aus, max. 20).</summary>
     public int MicrophoneGainDb { get; set; }
     public bool AutoHoldOtherCalls { get; set; } = true;
+    /// <summary>Weitere Anrufer hören „besetzt“, solange ein Gespräch läuft (auch gehalten) oder aufgebaut wird.</summary>
+    public bool BusyWhenInCall { get; set; } = false;
     /// <summary>Bei Klick auf tel:/sip:-Links sofort wählen statt die Nummer nur ins Wählfeld zu übernehmen.</summary>
     public bool DialLinksImmediately { get; set; }
     public bool SipTrace { get; set; }
@@ -75,6 +77,8 @@ public sealed class CallHistoryEntry
 {
     public CallDirection Direction { get; set; }
     public bool Missed { get; set; }
+    /// <summary>Anruf wurde automatisch mit „besetzt“ abgewiesen, weil gerade ein Gespräch lief.</summary>
+    public bool RejectedBusy { get; set; }
     public string RemoteName { get; set; } = "";
     public string RemoteNumber { get; set; } = "";
     public string AccountId { get; set; } = "";
@@ -95,7 +99,8 @@ public sealed class CallHistoryEntry
                      : Start.ToString("dd.MM. HH:mm");
             var parts = new List<string> { when, AccountName };
             if (!string.IsNullOrWhiteSpace(RemoteName) && RemoteName != RemoteNumber) parts.Insert(0, RemoteNumber);
-            if (Missed) parts.Add(Direction == CallDirection.Incoming ? "verpasst" : "nicht erreicht");
+            if (RejectedBusy) parts.Add("besetzt");
+            else if (Missed) parts.Add(Direction == CallDirection.Incoming ? "verpasst" : "nicht erreicht");
             else if (Duration > TimeSpan.Zero) parts.Add(Duration.ToString(Duration.TotalHours >= 1 ? @"h\:mm\:ss" : @"m\:ss"));
             return string.Join(" · ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));
         }

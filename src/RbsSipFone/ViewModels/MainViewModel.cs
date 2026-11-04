@@ -6,6 +6,7 @@ using RbsSipFone.Mvvm;
 using RbsSipFone.Services;
 using RbsSipFone.Sip;
 using SIPSorcery.SIP;
+using SIPSorcery.SIP.App;
 
 namespace RbsSipFone.ViewModels;
 
@@ -305,9 +306,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (_settings.BusyWhenInCall && IsInCall)
+        {
+            RejectBusy(invite, account, "Gespräch läuft");
+            return;
+        }
+
         if (Calls.Count(c => !c.IsEnded) >= MaxParallelCalls)
         {
-            _ = _engine.Transport.SendResponseAsync(SIPResponse.GetResponse(invite, SIPResponseStatusCodesEnum.BusyHere, null));
+            RejectBusy(invite, account, $"bereits {MaxParallelCalls} Gespräche");
             return;
         }
 
@@ -332,12 +339,65 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             // Anruf war schon vorbei (z. B. kurz geklingelt): Namen im Eintrag der Anrufliste nachtragen.
             var entry = History.FirstOrDefault(h => h.Start == call.Started && h.RemoteNumber == call.RemoteNumber);
-            if (entry == null || entry.RemoteName == result.Name) return;
-            var index = History.IndexOf(entry);
-            entry.RemoteName = result.Name;
-            History.RemoveAt(index);
-            History.Insert(index, entry);
-            SaveHistory();
+            if (entry != null) SetHistoryName(entry, result.Name);
+        }
+        catch (Exception ex) { SipLog.Write("Anrufer-Suche: " + ex.Message); }
+    }
+
+    /// <summary>Trägt einen gefundenen Namen in einen Eintrag der Anrufliste ein und aktualisiert die Anzeige.</summary>
+    private void SetHistoryName(CallHistoryEntry entry, string name)
+    {
+        var index = History.IndexOf(entry);
+        if (index < 0 || entry.RemoteName == name) return;
+        entry.RemoteName = name;
+        History.RemoveAt(index);
+        History.Insert(index, entry);
+        SaveHistory();
+    }
+
+    /// <summary>Läuft gerade ein Gespräch (auch gehalten) oder wird ein eigener Anruf aufgebaut?</summary>
+    private bool IsInCall => Calls.Any(c => c.IsActive || c.IsOutgoingPending);
+
+    /// <summary>
+    /// Weist einen Anruf mit „486 Busy Here“ ab. Über eine eigene UAS-Transaktion, damit Wiederholungen des INVITE
+    /// und das ACK sauber abgefangen werden. Mit Konto wird der Anruf in der Anrufliste vermerkt.
+    /// </summary>
+    private void RejectBusy(SIPRequest invite, AccountViewModel? account, string reason)
+    {
+        var (number, name) = CallViewModel.DescribeCaller(invite);
+        SipLog.Write($"{(account != null ? $"[{account.Name}] " : "")}Anruf von {invite.Header.From?.FromURI} mit „besetzt“ abgewiesen ({reason})");
+        try
+        {
+            var transaction = new UASInviteTransaction(_engine.Transport, invite, null);
+            new SIPServerUserAgent(_engine.Transport, null, transaction, null).Reject(SIPResponseStatusCodesEnum.BusyHere, null);
+        }
+        catch (Exception ex) { SipLog.Write("Besetzt senden: " + ex.Message); }
+
+        if (account == null) return;
+        var entry = new CallHistoryEntry
+        {
+            Direction = CallDirection.Incoming,
+            Missed = true,
+            RejectedBusy = true,
+            RemoteName = name,
+            RemoteNumber = number,
+            AccountId = account.Config.Id,
+            AccountName = account.Name,
+            Start = DateTime.Now
+        };
+        History.Insert(0, entry);
+        while (History.Count > ConfigStore.MaxHistoryEntries) History.RemoveAt(History.Count - 1);
+        SaveHistory();
+        if (CallerLookup.IsConfigured(_settings.CallerLookupUrl) && CallerLookup.IsLookupable(number))
+            _ = LookupHistoryNameAsync(entry);
+    }
+
+    private async Task LookupHistoryNameAsync(CallHistoryEntry entry)
+    {
+        try
+        {
+            var result = await _callerLookup.LookupAsync(_settings.CallerLookupUrl!, _settings.CallerLookupApiKey, entry.RemoteNumber);
+            if (result.Name != null) SetHistoryName(entry, result.Name);
         }
         catch (Exception ex) { SipLog.Write("Anrufer-Suche: " + ex.Message); }
     }

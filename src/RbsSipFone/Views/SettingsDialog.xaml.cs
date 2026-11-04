@@ -27,6 +27,7 @@ public partial class SettingsDialog : Window
 
         PortBox.Text = settings.LocalSipPort.ToString();
         AutoHoldBox.IsChecked = settings.AutoHoldOtherCalls;
+        BusyBox.IsChecked = settings.BusyWhenInCall;
         TraceBox.IsChecked = settings.SipTrace;
         DialLinksBox.IsChecked = settings.DialLinksImmediately;
         UpdateLinkStatus();
@@ -245,6 +246,7 @@ public partial class SettingsDialog : Window
         _settings.RingDevice = (RingBox.SelectedItem as string)?.Replace(" (nicht verbunden)", "");
         _settings.LocalSipPort = port;
         _settings.AutoHoldOtherCalls = AutoHoldBox.IsChecked == true;
+        _settings.BusyWhenInCall = BusyBox.IsChecked == true;
         _settings.SipTrace = TraceBox.IsChecked == true;
         _settings.MicrophoneGainDb = (int)Math.Round(MicGainSlider.Value);
         _settings.DialLinksImmediately = DialLinksBox.IsChecked == true;

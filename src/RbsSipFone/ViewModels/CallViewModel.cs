@@ -241,17 +241,20 @@ public sealed class CallViewModel : ObservableObject
 
     // ---------------------------------------------------------------- eingehend
 
+    /// <summary>Rufnummer und Anzeigename des Anrufers aus dem From-Header.</summary>
+    public static (string Number, string Name) DescribeCaller(SIPRequest invite)
+    {
+        var from = invite.Header.From;
+        var number = from?.FromURI?.User ?? from?.FromURI?.Host ?? "Unbekannt";
+        if (string.Equals(number, "anonymous", StringComparison.OrdinalIgnoreCase)) number = "Unterdrückt";
+        return (number, from?.FromName?.Trim('"', ' ') ?? "");
+    }
+
     public static CallViewModel CreateIncoming(AccountViewModel account, SipEngine engine, SIPRequest invite,
         Func<int> micIndex, Func<int> speakerIndex, Func<float> micGain)
     {
         var call = new CallViewModel(account, engine, CallDirection.Incoming, micIndex, speakerIndex, micGain, invite.Header.CallId);
-        var from = invite.Header.From;
-        call.RemoteNumber = from?.FromURI?.User ?? from?.FromURI?.Host ?? "Unbekannt";
-        call.RemoteName = from?.FromName?.Trim('"', ' ') ?? "";
-        if (string.Equals(call.RemoteNumber, "anonymous", StringComparison.OrdinalIgnoreCase))
-        {
-            call.RemoteNumber = "Unterdrückt";
-        }
+        (call.RemoteNumber, call.RemoteName) = DescribeCaller(invite);
 
         call._uas = call.UA.AcceptCall(invite);
         call.UA.ServerCallCancelled += (_, _) => Ui.Post(() => call.End("Anrufer hat aufgelegt"));

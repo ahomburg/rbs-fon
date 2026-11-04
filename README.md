@@ -24,7 +24,11 @@ Lizenz: MIT für den eigenen Code. Für Logo und Marke sowie für die Bibliothek
 - Eingehende Anrufe mit Klingelton, Anklopfton während eines Gesprächs, blinkender Taskleiste.
 - Im Gespräch: **Halten/Fortsetzen**, **Stummschalten**, **DTMF** (RFC 4733, Wähltasten oder Tastatur),
   **Weiterleiten** (blind an eine Nummer oder vermittelt an ein anderes laufendes Gespräch), Auflegen.
-- Mehrere Gespräche parallel (bis 4); beim Annehmen/Wählen werden andere Gespräche automatisch gehalten (abschaltbar).
+- **Besetzt während eines Gesprächs** (Standard, abschaltbar unter Einstellungen → Verhalten): Läuft ein Gespräch
+  (auch gehalten) oder wird ein eigener Anruf aufgebaut, hören weitere Anrufer „besetzt“ (SIP 486). Die abgewiesenen
+  Anrufe stehen mit „besetzt“ in der Anrufliste.
+- Mehrere Gespräche parallel (bis 4, wenn „besetzt“ ausgeschaltet ist, mit Anklopfton); beim Annehmen/Wählen werden
+  andere Gespräche automatisch gehalten (abschaltbar).
 - Lokal erzeugter deutscher Freiton (425 Hz) bei 180 Ringing ohne Early Media.
 - Anrufliste (ein-/ausgehend/verpasst, Dauer, Konto) mit Rückruf per Doppelklick und Kontextmenü.
 - Audiogeräte wählbar: Mikrofon, Lautsprecher/Headset, separates Klingelton-Gerät.
