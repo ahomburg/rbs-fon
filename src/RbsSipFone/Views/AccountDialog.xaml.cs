@@ -35,11 +35,7 @@ public partial class AccountDialog : Window
         var domain = DomainBox.Text.Trim();
         if (domain.StartsWith("sip:", StringComparison.OrdinalIgnoreCase)) domain = domain[4..];
 
-        string? error = null;
-        if (user.Length == 0) error = "Bitte einen Benutzernamen bzw. eine Rufnummer angeben.";
-        else if (domain.Length == 0) error = "Bitte die Domain bzw. den SIP-Server angeben.";
-        else if (user.Contains('@') || user.Contains(' ')) error = "Der Benutzername darf kein „@“ und keine Leerzeichen enthalten.";
-        else if (domain.Contains('@') || domain.Contains(' ')) error = "Die Domain darf kein „@“ und keine Leerzeichen enthalten.";
+        var error = AccountConfig.ValidateAddress(user, domain);
 
         if (!int.TryParse(ExpiryBox.Text.Trim(), out var expiry) || expiry < 60 || expiry > 3600)
             error ??= "Das Intervall muss zwischen 60 und 3600 Sekunden liegen.";

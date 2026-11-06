@@ -39,8 +39,53 @@ Lizenz: MIT für den eigenen Code. Für Logo und Marke sowie für die Bibliothek
 - **Automatischer Start mit Windows** (optional minimiert), damit die Konten nach der Anmeldung sofort erreichbar sind.
 - **Mini-Ansicht** (Schaltfläche „Mini“ oben rechts oder `Strg+M`): nur Wählfeld und laufende Gespräche in einem
   schmalen Fenster, ohne Konten und Anrufliste. Die gewählte Ansicht bleibt beim nächsten Start erhalten.
+- **Konten exportieren und importieren** als einfache JSON-Datei, z. B. für einen neuen PC oder als Sicherung.
+  Die Datei lässt sich auch von Hand erstellen.
 - **Anrufer-Erkennung** über einen eigenen REST-Dienst (z. B. CRM oder Telefonbuch): Der Name des Anrufers wird
   angezeigt und in der Anrufliste gespeichert.
+
+## Konten exportieren und importieren
+
+Die beiden Symbole oben in der Spalte **Konten** öffnen Export und Import. In der Mini-Ansicht ist die Spalte ausgeblendet.
+
+- **Export:** Konten auswählen und als JSON-Datei speichern, wahlweise mit oder ohne Passwörter.
+- **Import:** Datei wählen und Konten auswählen. Neue Konten sind vorausgewählt. Bereits vorhandene (gleiche Adresse)
+  werden nur überschrieben, wenn sie angekreuzt werden; sie behalten ihr Passwort, wenn die Datei keines enthält.
+  Importierte Passwörter werden wieder per DPAPI für den aktuellen Windows-Benutzer gespeichert.
+
+> **Achtung:** Die Datei ist nicht verschlüsselt, Passwörter stehen darin im Klartext. Wer sie lesen kann, kann die
+> Konten benutzen. Bitte sicher aufbewahren und nach dem Import löschen.
+
+Die Datei lässt sich auch von Hand erstellen. Pflicht sind nur `accounts` und darin `username` und `domain`:
+
+```json
+{
+  // Kommentare und überzählige Kommas sind erlaubt
+  "accounts": [
+    {
+      "name": "Büro",
+      "username": "0721123456",
+      "domain": "sip.example.org",
+      "password": "geheim"
+    }
+  ]
+}
+```
+
+| Feld | Bedeutung | Standard |
+| --- | --- | --- |
+| `name` | Bezeichnung im Programm | leer |
+| `username` | Benutzername / Rufnummer (Pflicht) | |
+| `domain` | Domain / SIP-Server (Pflicht) | |
+| `password` | Passwort im Klartext. Fehlt es, wird ein neues Konto deaktiviert importiert. | keines |
+| `displayName` | Name, den der Angerufene sieht | leer |
+| `authUsername` | abweichender Benutzername für die Anmeldung | leer |
+| `proxy` | Registrar / Outbound-Proxy (`host[:port]`) | leer |
+| `transport` | `udp`, `tcp` oder `tls` | `udp` |
+| `expiry` | Gültigkeit der Registrierung in Sekunden (60–3600) | `300` |
+| `enabled` | Konto aktiv | `true` |
+
+Die Datei enthält nur Konten, keine Anrufliste und keine sonstigen Einstellungen.
 
 ## Anrufer-Erkennung (REST-Dienst)
 
@@ -142,7 +187,8 @@ src/RbsSipFone/
   ViewModels/CallViewModel      ein Gespräch (SIPUserAgent + WindowsAudioEndPoint)
   ViewModels/MainViewModel      Konten, Gespräche, Wählfeld, Anrufliste, Klingel-/Freiton-Logik
   Services/                     Konfiguration, Protokoll, Audiogeräte, Tonerzeugung, Mikrofon-Verstärkung,
-                                Link-Parser (PhoneLink), Windows-Registrierung, Autostart, Anrufer-Erkennung (CallerLookup), Einzelinstanz (SingleInstance)
+                                Link-Parser (PhoneLink), Windows-Registrierung, Autostart, Anrufer-Erkennung (CallerLookup),
+                                Konten-Export/-Import (AccountTransfer), Einzelinstanz (SingleInstance)
   Themes/Theme.xaml             rbs-Gestaltung (Farben, Buttons, Felder, Schalter, Scrollbars)
   Views/                        Hauptfenster und Dialoge
 tests/RbsSipFone.Tests/         Unit-Tests (xUnit), z. B. für den Link-Parser – ausführen mit `dotnet test`

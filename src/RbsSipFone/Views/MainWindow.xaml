@@ -296,8 +296,14 @@
                 <DockPanel Margin="18,20,18,12">
                     <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
                         <TextBlock Style="{StaticResource SectionTitle}" Text="KONTEN" />
-                        <Button Style="{StaticResource IconButton}" Content="&#xE710;" HorizontalAlignment="Right"
-                                ToolTip="Konto hinzufügen" AutomationProperties.Name="Konto hinzufügen" Command="{Binding AddAccountCommand}" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource IconButton}" Content="&#xE8B5;" Margin="0,0,2,0"
+                                    ToolTip="Konten importieren" AutomationProperties.Name="Konten importieren" Command="{Binding ImportAccountsCommand}" />
+                            <Button Style="{StaticResource IconButton}" Content="&#xEDE1;" Margin="0,0,2,0"
+                                    ToolTip="Konten exportieren" AutomationProperties.Name="Konten exportieren" Command="{Binding ExportAccountsCommand}" />
+                            <Button Style="{StaticResource IconButton}" Content="&#xE710;"
+                                    ToolTip="Konto hinzufügen" AutomationProperties.Name="Konto hinzufügen" Command="{Binding AddAccountCommand}" />
+                        </StackPanel>
                     </Grid>
 
                     <StackPanel DockPanel.Dock="Top" Visibility="{Binding HasAccounts, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
@@ -307,6 +313,8 @@
                                    TextAlignment="Center" TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,4,0,14" />
                         <Button Style="{StaticResource PrimaryButton}" Content="Konto einrichten" HorizontalAlignment="Center"
                                 Command="{Binding AddAccountCommand}" />
+                        <Button Style="{StaticResource SecondaryButton}" Content="Konten importieren" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                Command="{Binding ImportAccountsCommand}" />
                     </StackPanel>
 
                     <ListBox ItemsSource="{Binding Accounts}" ItemTemplate="{StaticResource AccountCard}"

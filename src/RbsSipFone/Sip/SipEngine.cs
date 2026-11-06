@@ -41,9 +41,10 @@ public sealed class SipEngine : IDisposable
         {
             Transport.AddSIPChannel(new SIPUDPChannel(new IPEndPoint(IPAddress.Any, port)));
         }
-        catch (SocketException ex) when (port != 0)
+        // SIPSorcery meldet einen belegten Port als ApplicationException ("Unable to bind socket").
+        catch (Exception ex) when (port != 0 && ex is SocketException or ApplicationException)
         {
-            SipLog.Write($"UDP-Port {port} belegt ({ex.SocketErrorCode}), verwende freien Port.");
+            SipLog.Write($"UDP-Port {port} belegt ({ex.Message}), verwende freien Port.");
             Transport.AddSIPChannel(new SIPUDPChannel(new IPEndPoint(IPAddress.Any, 0)));
         }
 
@@ -51,7 +52,7 @@ public sealed class SipEngine : IDisposable
         {
             Transport.AddSIPChannel(new SIPTCPChannel(new IPEndPoint(IPAddress.Any, port)));
         }
-        catch (SocketException) when (port != 0)
+        catch (Exception ex) when (port != 0 && ex is SocketException or ApplicationException)
         {
             Transport.AddSIPChannel(new SIPTCPChannel(new IPEndPoint(IPAddress.Any, 0)));
         }

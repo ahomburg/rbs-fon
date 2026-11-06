@@ -142,6 +142,34 @@ public partial class MainWindow : Window, IDialogs
         return dlg.ShowDialog() == true ? dlg.Result : null;
     }
 
+    public void ExportAccounts(IReadOnlyList<AccountConfig> accounts)
+    {
+        var dlg = new AccountExportDialog(accounts) { Owner = this };
+        if (dlg.ShowDialog() == true) Info($"{(dlg.SavedCount == 1 ? "1 Konto" : $"{dlg.SavedCount} Konten")} exportiert nach:\n{dlg.SavedPath}");
+    }
+
+    public IReadOnlyList<ImportCandidate> ImportAccounts(IReadOnlyList<AccountConfig> existing)
+    {
+        var open = new Microsoft.Win32.OpenFileDialog { Title = "Konten importieren", Filter = "Konten-Datei (*.json)|*.json|Alle Dateien (*.*)|*.*" };
+        if (open.ShowDialog(this) != true) return [];
+
+        IReadOnlyList<AccountData> accounts;
+        try
+        {
+            if (new System.IO.FileInfo(open.FileName).Length > AccountTransfer.MaxFileSize)
+                throw new AccountFileException("Die Datei ist zu groß für eine Konten-Datei.");
+            accounts = AccountTransfer.Read(System.IO.File.ReadAllText(open.FileName));
+        }
+        catch (Exception ex) when (ex is AccountFileException or System.IO.IOException or UnauthorizedAccessException)
+        {
+            Info("Die Datei konnte nicht gelesen werden.\n\n" + ex.Message);
+            return [];
+        }
+
+        var dlg = new AccountImportDialog(System.IO.Path.GetFileName(open.FileName), accounts, existing) { Owner = this };
+        return dlg.ShowDialog() == true ? dlg.Selected : [];
+    }
+
     public bool EditSettings(AppSettings settings)
     {
         var dlg = new SettingsDialog(settings) { Owner = this };

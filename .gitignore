@@ -483,6 +483,7 @@ $RECYCLE.BIN/
 
 # rbs-sip-fone: persönliche Laufzeitdaten (normalerweise unter %APPDATA%\rbs-sip-fone),
 # falls RBS_SIP_FONE_HOME einmal auf einen Ordner im Projekt zeigt
+rbs-konten*.json
 settings.json
 settings.json.tmp
 history.json

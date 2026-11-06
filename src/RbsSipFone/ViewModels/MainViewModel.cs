@@ -17,6 +17,9 @@ public sealed record TransferChoice(string? Destination, CallViewModel? OtherCal
 public interface IDialogs
 {
     AccountConfig? EditAccount(AccountConfig? existing);
+    void ExportAccounts(IReadOnlyList<AccountConfig> accounts);
+    /// <summary>Fragt Datei und Auswahl ab; leer, wenn nichts importiert werden soll.</summary>
+    IReadOnlyList<ImportCandidate> ImportAccounts(IReadOnlyList<AccountConfig> existing);
     bool EditSettings(AppSettings settings);
     TransferChoice? AskTransfer(CallViewModel call, IReadOnlyList<CallViewModel> others);
     bool Confirm(string message);
@@ -82,6 +85,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AddAccountCommand = new RelayCommand(AddAccount);
         EditAccountCommand = new RelayCommand(p => EditAccount(p as AccountViewModel));
         DeleteAccountCommand = new RelayCommand(p => DeleteAccount(p as AccountViewModel));
+        ExportAccountsCommand = new RelayCommand(() => _dialogs.ExportAccounts(_settings.Accounts), () => HasAccounts);
+        ImportAccountsCommand = new RelayCommand(ImportAccounts);
         SettingsCommand = new RelayCommand(OpenSettings);
         ToggleViewCommand = new RelayCommand(() => IsMiniView = !IsMiniView);
         AnswerCommand = new RelayCommand(p => _ = AnswerAsync(p as CallViewModel));
@@ -108,6 +113,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ICommand AddAccountCommand { get; }
     public ICommand EditAccountCommand { get; }
     public ICommand DeleteAccountCommand { get; }
+    public ICommand ExportAccountsCommand { get; }
+    public ICommand ImportAccountsCommand { get; }
     public ICommand SettingsCommand { get; }
     public ICommand ToggleViewCommand { get; }
     public ICommand AnswerCommand { get; }
@@ -580,6 +587,41 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _settings.Accounts.RemoveAll(a => a.Id == vm.Config.Id);
         if (DialAccount == vm) DialAccount = Accounts.FirstOrDefault(a => a.Enabled) ?? Accounts.FirstOrDefault();
         SaveSettings();
+    }
+
+    private void ImportAccounts()
+    {
+        var selected = _dialogs.ImportAccounts(_settings.Accounts);
+        if (selected.Count == 0) return;
+
+        var inactive = 0;
+        foreach (var item in selected)
+        {
+            var cfg = AccountTransfer.ToConfig(item.Data, item.Existing);
+            if (item.Data.Enabled && !cfg.Enabled) inactive++;
+
+            var vm = item.Existing == null ? null : Accounts.FirstOrDefault(a => a.Config.Id == item.Existing.Id);
+            var index = item.Existing == null ? -1 : _settings.Accounts.FindIndex(a => a.Id == item.Existing.Id);
+            if (vm != null && index >= 0)
+            {
+                _settings.Accounts[index] = cfg;
+                vm.Replace(cfg);
+            }
+            else
+            {
+                _settings.Accounts.Add(cfg);
+                vm = AddAccountViewModel(cfg);
+                DialAccount ??= vm;
+                vm.Start();
+            }
+        }
+        SaveSettings();
+        OnPropertyChanged(nameof(RegistrationSummary));
+        var done = $"{(selected.Count == 1 ? "1 Konto" : $"{selected.Count} Konten")} importiert.";
+        SipLog.Write(done);
+        _dialogs.Info(inactive == 0
+            ? done
+            : $"{done}\n\nDeaktiviert, weil das Passwort fehlt: {inactive}. Bitte Passwort eintragen und das Konto einschalten.");
     }
 
     // ------------------------------------------------------------------ Einstellungen

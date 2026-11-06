@@ -36,6 +36,18 @@ public sealed class AccountConfig
     public string AddressOfRecord => $"{Username}@{Domain}";
 
     public AccountConfig Clone() => (AccountConfig)MemberwiseClone();
+
+    /// <summary>Prüft Benutzername und Domain; liefert eine Fehlermeldung oder null.</summary>
+    public static string? ValidateAddress(string? user, string? domain)
+    {
+        static bool Invalid(string value) => value.Any(c => c == '@' || char.IsWhiteSpace(c) || char.IsControl(c));
+
+        if (string.IsNullOrEmpty(user)) return "Bitte einen Benutzernamen bzw. eine Rufnummer angeben.";
+        if (string.IsNullOrEmpty(domain)) return "Bitte die Domain bzw. den SIP-Server angeben.";
+        if (Invalid(user)) return "Der Benutzername darf kein „@“ und keine Leerzeichen enthalten.";
+        if (Invalid(domain)) return "Die Domain darf kein „@“ und keine Leerzeichen enthalten.";
+        return null;
+    }
 }
 
 public sealed class AppSettings
